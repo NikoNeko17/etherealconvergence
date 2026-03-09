@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ethereal Convergence — Game Design Document v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --void:    #050508;
+    --panel:   #0e0e16;
+    --border:  #1e1e2e;
+    --border2: #111120;
+    --accent:  #9898c0;
+    --accent2: #c8c8e8;
+    --gold:    #c8a040;
+    --red:     #c84a28;
+    --green:   #4a9e5c;
+    --blue:    #4a6aae;
+    --teal:    #48a898;
+    --symphony:#5aa8d8;
+    --text:    #e4e0d8;
+    --text2:   #888898;
+    --muted:   #484858;
+    --dim:     #222230;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--void);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.75;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+  }
+
+  .ambient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 700px 500px at 90% 5%,  rgba(152,152,192,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 600px 500px at 5%  95%, rgba(72,168,152,0.03) 0%, transparent 70%),
+      radial-gradient(ellipse 500px 400px at 50% 50%, rgba(90,168,216,0.02) 0%, transparent 70%);
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(5,5,8,0.92);
+    border-bottom: 1px solid var(--border2);
+    backdrop-filter: blur(12px);
+    padding: 0 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 48px;
+  }
+
+  .nav-brand {
+    font-family: 'Cinzel', serif;
+    font-size: 10pt; font-weight: 900;
+    letter-spacing: 0.2em; color: var(--accent2);
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex; gap: 28px; list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 7pt; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  @media (max-width: 768px) { .nav-links { display: none; } }
+
+  /* ── WRAPPER ── */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 1000px; margin: 0 auto;
+    padding: 0 40px 100px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    text-align: center; padding: 100px 40px 80px;
+  }
+
+  .cover-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 7.5pt; letter-spacing: 0.55em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 36px; display: block;
+  }
+
+  .cover-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(40pt, 8vw, 64pt);
+    font-weight: 900; letter-spacing: 0.08em;
+    line-height: 0.9; color: var(--accent2);
+    margin-bottom: 18px;
+  }
+
+  .cover-subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: 13pt; font-weight: 400;
+    letter-spacing: 0.35em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 48px;
+  }
+
+  .cover-rule {
+    width: 280px; height: 1px; margin: 0 auto 48px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .cover-tagline {
+    font-style: italic; font-size: 14pt;
+    color: var(--text2); max-width: 520px;
+    line-height: 1.7; margin-bottom: 56px;
+  }
+
+  .cover-meta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8pt; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--muted); line-height: 2.4;
+    margin-bottom: 36px;
+  }
+  .cover-meta span { color: var(--accent); }
+
+  .cover-disclaimer {
+    max-width: 560px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.018);
+    padding: 14px 20px;
+    font-size: 9.5pt; font-style: italic;
+    color: var(--muted); line-height: 1.7;
+  }
+  .cover-disclaimer strong { color: var(--text2); font-weight: 400; font-style: normal; }
+
+  /* ── SECTION ── */
+  .section {
+    padding-top: 96px; margin-bottom: 0;
+  }
+
+  .section-header {
+    margin-bottom: 36px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 7.5pt; letter-spacing: 0.45em; text-transform: uppercase;
+    color: var(--muted); display: block; margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22pt, 4vw, 32pt);
+    font-weight: 900; letter-spacing: 0.08em;
+    color: var(--accent2); line-height: 1;
+  }
+
+  .section-sub {
+    font-style: italic; font-size: 11pt;
+    color: var(--muted); margin-top: 8px;
+  }
+
+  /* ── SUBSECTION ── */
+  .sub { margin-bottom: 32px; }
+
+  .sub-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11pt; font-weight: 600;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 12px;
+    padding-left: 12px;
+    border-left: 2px solid var(--accent);
+  }
+
+  /* ── TEXT ── */
+  p {
+    font-size: 11pt; line-height: 1.8;
+    color: var(--text2); font-weight: 300;
+    margin-bottom: 10px;
+  }
+  p:last-child { margin-bottom: 0; }
+  p strong { color: var(--text); font-weight: 400; }
+  p em { color: var(--accent2); font-style: italic; }
+
+  /* ── HIGHLIGHT ── */
+  .hl {
+    border-left: 2px solid var(--accent);
+    background: rgba(152,152,192,0.05);
+    padding: 14px 18px; margin: 18px 0;
+  }
+  .hl p { font-style: italic; color: var(--accent2); font-size: 12pt; }
+
+  /* ── GRID ── */
+  .grid { display: grid; gap: 12px; margin: 14px 0; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 700px) { .g2, .g3 { grid-template-columns: 1fr; } }
+
+  .cell {
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
+    padding: 14px 16px;
+  }
+
+  .cell-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 7pt; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--muted); display: block;
+    margin-bottom: 7px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  .cell-body {
+    font-size: 10.5pt; color: var(--text2);
+    font-weight: 300; line-height: 1.65;
+  }
+  .cell-body strong { color: var(--text); font-weight: 400; }
+  .cell-body em { color: var(--accent2); font-style: italic; }
+  .cell-body br { line-height: 2; }
+
+  /* ── TABLE ── */
+  .tbl { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 10pt; }
+  .tbl th {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 7pt; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--muted); padding: 9px 12px;
+    border-bottom: 1px solid var(--border); text-align: left; font-weight: 400;
+  }
+  .tbl td {
+    padding: 9px 12px; color: var(--text2); font-weight: 300;
+    border-bottom: 1px solid rgba(30,30,46,0.6);
+    vertical-align: top; line-height: 1.55;
+  }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td strong { color: var(--text); font-weight: 400; }
+  .tbl td em { color: var(--accent2); font-style: italic; }
+
+  /* ── CHAR NAME ── */
+  .cn { font-family: 'Cinzel', serif; font-size: 11pt; font-weight: 600; }
+
+  /* ── BADGE ── */
+  .badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 6.5pt; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 2px 7px; border: 1px solid; display: inline-block;
+    white-space: nowrap;
+  }
+  .b-mat { border-color: var(--gold);     color: var(--gold); }
+  .b-ent { border-color: var(--red);      color: var(--red); }
+  .b-dis { border-color: var(--green);    color: var(--green); }
+  .b-vac { border-color: var(--blue);     color: var(--blue); }
+  .b-sin { border-color: var(--symphony); color: var(--symphony); }
+  .b-uni { border-color: var(--muted);    color: var(--muted); }
+
+  /* ── LIST ── */
+  ul.dl { list-style: none; padding: 0; margin: 10px 0; }
+  ul.dl li {
+    font-size: 10.5pt; line-height: 1.72; color: var(--text2); font-weight: 300;
+    padding: 5px 0 5px 20px; position: relative;
+    border-bottom: 1px solid rgba(30,30,46,0.5);
+  }
+  ul.dl li:last-child { border-bottom: none; }
+  ul.dl li::before {
+    content: '—'; position: absolute; left: 0;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8pt; color: var(--accent);
+  }
+  ul.dl li strong { color: var(--text); font-weight: 400; }
+  ul.dl li em { color: var(--accent2); font-style: italic; }
+
+  /* ── COLLAB BLOCK ── */
+  .collab {
+    border: 1px solid var(--accent);
+    background: rgba(152,152,192,0.04);
+    padding: 18px 22px; margin-bottom: 12px;
+  }
+  .collab-title {
+    font-family: 'Cinzel', serif; font-size: 11pt; font-weight: 600;
+    letter-spacing: 0.1em; color: var(--accent2); margin-bottom: 8px;
+  }
+  .collab p { font-size: 10.5pt; margin-bottom: 6px; }
+  .collab p:last-child { margin-bottom: 0; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px; margin: 60px 0 0;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 80px; padding-top: 24px;
+    border-top: 1px solid var(--border2);
+    text-align: center;
+  }
+  .footer-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 7.5pt; letter-spacing: 0.3em; text-transform: uppercase;
+    color: var(--dim); line-height: 2.4;
+  }
+  .footer-text span { color: var(--muted); }
+
+  /* ── TOC ── */
+  .toc {
+    margin: 40px 0 0;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.012);
+    padding: 28px 32px;
+  }
+  .toc-title {
+    font-family: 'Cinzel', serif; font-size: 10pt; font-weight: 600;
+    letter-spacing: 0.35em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 20px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .toc-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 5px 0; border-bottom: 1px dotted var(--border2);
+  }
+  .toc-row:last-child { border-bottom: none; }
+  .toc-row.major {
+    font-family: 'Cinzel', serif; font-size: 10.5pt; font-weight: 600;
+    color: var(--accent2); margin-top: 10px; padding-top: 8px;
+  }
+  .toc-row.minor {
+    font-size: 10pt; color: var(--text2); font-weight: 300;
+    padding-left: 18px;
+  }
+  .toc-row a { color: inherit; text-decoration: none; }
+  .toc-row a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#">ETHEREAL CONVERGENCE</a>
+  <ul class="nav-links">
+    <li><a href="#vision">Vision</a></li>
+    <li><a href="#lore">Lore</a></li>
+    <li><a href="#iterant">Iterant</a></li>
+    <li><a href="#roster">Roster</a></li>
+    <li><a href="#systems">Systems</a></li>
+    <li><a href="#monetization">Monetization</a></li>
+    <li><a href="#collaborators">Collaborate</a></li>
+  </ul>
+</nav>
+
+<div class="wrapper">
+
+  <!-- ══ COVER ══ -->
+  <div class="cover">
+    <span class="cover-label">Game Design Document · Version 1.0 · Pre-Production</span>
+    <div class="cover-title">ETHEREAL<br>CONVERGENCE</div>
+    <div class="cover-subtitle">An Action RPG</div>
+    <div class="cover-rule"></div>
+    <p class="cover-tagline">
+      "The universe was born from a calculation error.<br>
+      You are the only being that should not exist within it."
+    </p>
+    <div class="cover-meta">
+      Genre: <span>Action RPG · Gacha-Free</span><br>
+      Platform: <span>PC · Mobile (TBD)</span><br>
+      Engine: <span>TBD — Unity 2022 LTS in evaluation</span><br>
+      Status: <span>Pre-Production · Seeking Collaborators</span><br>
+      Contact: <span>etherealconvergenceofficial@gmail.com</span>
+    </div>
+    <div class="cover-disclaimer">
+      <strong>Note on AI-assisted development:</strong> This project uses AI tools (Claude by Anthropic, Gemini by Google) as instruments for system design, documentation, and conceptual iteration. All creative decisions — characters, lore, mechanics, direction — are made by the project lead. AI is used as a design tool, not as a replacement for creative authorship.
+    </div>
+
+    <div class="toc">
+      <div class="toc-title">Table of Contents</div>
+      <div class="toc-row major"><a href="#vision">01 · Vision & Pillars</a></div>
+      <div class="toc-row minor"><a href="#vision">Concept Statement · Design Pillars · Target Audience</a></div>
+      <div class="toc-row major"><a href="#lore">02 · World & Lore</a></div>
+      <div class="toc-row minor"><a href="#lore">The Origin · The Realities · Kyleon & Umbraciel · Resonants</a></div>
+      <div class="toc-row major"><a href="#iterant">03 · The Iterant — Protagonist</a></div>
+      <div class="toc-row minor"><a href="#iterant">Nature · Anchor & Conduit · Resonance Mark System</a></div>
+      <div class="toc-row major"><a href="#roster">04 · Roster — Version 1.0</a></div>
+      <div class="toc-row minor"><a href="#roster">Character Overview · Weapon Types · Version 1.0 Availability</a></div>
+      <div class="toc-row major"><a href="#systems">05 · Core Systems</a></div>
+      <div class="toc-row minor"><a href="#systems">Combat · Condensations · Ethereal Flow · Stats</a></div>
+      <div class="toc-row major"><a href="#monetization">06 · Monetization</a></div>
+      <div class="toc-row minor"><a href="#monetization">Philosophy · Revenue Streams · F2P Commitment</a></div>
+      <div class="toc-row major"><a href="#collaborators">07 · Collaborator Brief</a></div>
+      <div class="toc-row minor"><a href="#collaborators">Open Roles · Revenue Share · Current Status</a></div>
+    </div>
+  </div>
+
+  <!-- ══ 01 VISION ══ -->
+  <div class="section" id="vision">
+    <div class="section-header">
+      <span class="section-num">Section 01</span>
+      <div class="section-title">Vision & Pillars</div>
+      <div class="section-sub">What Ethereal Convergence is and what it stands for</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Concept Statement</div>
+      <p><strong>Ethereal Convergence</strong> is a third-person action RPG set in a fragmented multiverse born from a cosmic calculation error — the equivalent of √(−1) in a deterministic system. Players control <em>the Iterant</em>, the only being capable of moving between Realities, uncovering why they exist and what it means to correct an error that would erase everything.</p>
+      <p>The game draws inspiration from <strong>Genshin Impact</strong>, <strong>Wuthering Waves</strong>, and <strong>Honkai: Star Rail</strong> in terms of combat feel and character depth — while carving its own identity through a science-fiction multiverse framework, a gacha-free monetization model, and characters whose designs emerge directly from their narrative purpose.</p>
+      <div class="hl"><p>"Every character in Ethereal Convergence carries something. The gameplay is how they express it."</p></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Design Pillars</div>
+      <div class="grid g3">
+        <div class="cell">
+          <span class="cell-label">Narrative Coherence</span>
+          <div class="cell-body">Every system, character, and mechanic connects back to the lore. Nothing exists in isolation. The Condensation equipment system reflects the multiverse. Character kits reflect their personalities.</div>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Respect for the Player</span>
+          <div class="cell-body">No predatory monetization. No power gaps between paying and free players. F2P players have access to a complete game experience. Paying players get content earlier and cosmetics — not advantages.</div>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Character Depth</span>
+          <div class="cell-body">Each Resonant carries an emotional core that informs their design, combat role, and narrative arc. Characters are not interchangeable — they are irreplaceable.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Target Audience</div>
+      <p>Players aged <strong>16–30</strong> who enjoy narrative-driven ARPGs with deep character rosters. Fans of Genshin Impact and Wuthering Waves who feel underserved by aggressive gacha monetization. Players who invest emotionally in characters and lore.</p>
+      <p>Secondary audience: players interested in build optimization through the Condensation system and character kit synergies.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══ 02 LORE ══ -->
+  <div class="section" id="lore">
+    <div class="section-header">
+      <span class="section-num">Section 02</span>
+      <div class="section-title">World & Lore</div>
+      <div class="section-sub">The universe, its structure, and the rules that govern it</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">The Origin</div>
+      <p>The universe of Ethereal Convergence was born from a <strong>calculation error</strong> — a result equivalent to <em>√(−1)</em> in a deterministic cosmic system. Rather than collapsing, the system fragmented into parallel dimensions called <strong>Realities</strong>, each one a different interpretation of the original fault.</p>
+      <p>At the center of everything lies the <strong>Point of Convergence</strong> — the exact location where the error was detected. Correcting it would erase every Reality that emerged from it. Everything and everyone in the game exists because of a mistake that no one dares undo.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">The Realities</div>
+      <div class="grid g2">
+        <div class="cell">
+          <span class="cell-label">Primary Realities</span>
+          <div class="cell-body">
+            <strong>Matter</strong> — stability, structure, physical law<br>
+            <strong>Entropy</strong> — decay, degradation, inevitable endings<br>
+            <strong>Distortion</strong> — malleable reality, rewritten conditions<br>
+            <strong>Void</strong> — the space between things, disconnection<br>
+            <strong>Symphony</strong> — balance, equilibrium, resonant harmony
+          </div>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Emergent Realities</span>
+          <div class="cell-body">
+            <strong>Chronos</strong> — temporal fragmentation<br>
+            <strong>Annulment</strong> — negation of existence<br>
+            <strong>Origin</strong> — the primordial signal<br><br>
+            <em>Emergent Realities formed after the primary fragmentation. Their nature is more unstable and less understood than the primaries.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">The Kyleon System & Umbraciel</div>
+      <p>The <strong>Kyleon System</strong> is the external infrastructure that monitors the simulation from outside its boundaries. It does not intervene — it observes. Kyleon is not a villain but a force of scientific indifference: it views each death of the Iterant as another data point in an ongoing experiment.</p>
+      <p><strong>Umbraciel</strong> is the location closest to the original error — where the Iterant returns after each death via <em>Ethereal Re-anchoring</em>. It functions as the game's narrative hub.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Resonants</div>
+      <p>Resonants are beings with a deep affinity to a single Reality. Their resonance is <strong>internal, not geographical</strong> — a Resonant can be attuned to Entropy while living their entire life in Matter. Resonance is something that happens <em>to</em> someone, shaped by who they are and what they lived through.</p>
+      <p>Resonants cannot travel between Realities on their own. Only specific factions and the Iterant possess that ability — making the Iterant uniquely valuable and uniquely dangerous to the established order of every Reality.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══ 03 ITERANT ══ -->
+  <div class="section" id="iterant">
+    <div class="section-header">
+      <span class="section-num">Section 03</span>
+      <div class="section-title">The Iterant</div>
+      <div class="section-sub">The protagonist — the being that should not exist</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Nature & Role</div>
+      <p>The Iterant is a single consciousness capable of synchronizing with <strong>multiple Realities simultaneously</strong> — something impossible for any other being. When they die, their consciousness is returned to Umbraciel via Ethereal Re-anchoring. The Kyleon System treats each death as an iteration of an experiment.</p>
+      <p>Their <em>sentenced desire</em>: understand why they exist. At the start of the game, their only motivation is survival — they don't know how they came to be, how they exist, or how they keep existing.</p>
+      <div class="hl"><p>"The Iterant is the only character in the game without a color of their own at the start. Their palette fills as they synchronize with Realities."</p></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Anchor & Conduit — Two Manifestations</div>
+      <div class="grid g2">
+        <div class="cell">
+          <span class="cell-label">Anchor — Manifestation α — Male</span>
+          <div class="cell-body">Apparent age 25–27. Cold, calculated, internally insecure. Carries the question of his existence as <em>weight</em> — builds external order to compensate for internal chaos. Black hair with amber reflections under ethereal light. Structured armor, earth tones. Resonance Mark uses uniform strokes and defined edges — <em>"as if engraved under pressure."</em></div>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Conduit — Manifestation β — Female</span>
+          <div class="cell-body">Apparent age 21–23. Expressive, curious, fluid — same existential insecurity underneath. Carries the question as <em>current</em> — converts it into speed rather than building walls. Silver-white hair with cyan highlights in motion. Asymmetric clothing, deep blue tones. Resonance Mark uses variable stroke width, finer at the ends — <em>"as if it flowed and settled."</em></div>
+        </div>
+      </div>
+      <p>The player chooses their manifestation at the start of the game. This choice is permanent and affects all subsequent story interactions and character dynamics.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Resonance Mark System</div>
+      <p>The Iterant's Resonance Mark is located on their <strong>spine</strong> — a place they cannot see directly. Others see it before they do.</p>
+      <ul class="dl">
+        <li><strong>Raw state:</strong> Empty outline ◌ — the shape of something that doesn't exist yet. Completely desaturated palette.</li>
+        <li><strong>First synchronization — Matter:</strong> Activates in combat through instinct. Symbol ⊞. Color arrives for the first time.</li>
+        <li><strong>Evolution:</strong> The mark deepens with each new Reality — more detail in the same location, never expanding outward.</li>
+        <li><strong>Symphony's blue</strong> (#5AA8D8) is the only color identical in both Anchor and Conduit palettes — the visual thread connecting them.</li>
+        <li><strong>Final state:</strong> Undefined — depends on the player's decision at the Point of Convergence.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══ 04 ROSTER ══ -->
+  <div class="section" id="roster">
+    <div class="section-header">
+      <span class="section-num">Section 04</span>
+      <div class="section-title">Roster — Version 1.0</div>
+      <div class="section-sub">Eight characters. Each one carries something.</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Character Overview</div>
+      <table class="tbl">
+        <thead>
+          <tr><th>Name</th><th>Rarity</th><th>Reality</th><th>Role</th><th>Weapon</th><th>Core</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cn" style="color:#a8a8c8;">Iterant</span></td>
+            <td>—</td>
+            <td><span class="badge b-uni">None / Multiple</span></td>
+            <td>Protagonist</td>
+            <td>Fractal Sword</td>
+            <td>Understands nothing about their existence. Survives first, questions later.</td>
+          </tr>
+          <tr>
+            <td><span class="cn" style="color:#7acc8a;">Claire</span></td>
+            <td>★★★★</td>
+            <td><span class="badge b-dis">Distortion</span></td>
+            <td>Debuffer · Off-field</td>
+            <td>Coded Rifle</td>
+            <td>Chose to survive at someone else's cost. Her happiness is a daily active decision, not denial.</td>
+          </tr>
+          <tr>
+            <td><span class="cn" style="color:#e8c878;">Valerius</span></td>
+            <td>★★★★★</td>
+            <td><span class="badge b-mat">Matter</span></td>
+            <td>Main DPS · Heavy</td>
+            <td>Compression Greatsword</td>
+            <td>Order as scar tissue. Something went wrong once and he built a system on top of it so it never happens again.</td>
+          </tr>
+          <tr>
+            <td><span class="cn" style="color:#f0d860;">Liora</span></td>
+            <td>★★★★</td>
+            <td><span class="badge b-mat">Matter</span></td>
+            <td>Shielder · Buffer</td>
+            <td>Architect's Compass</td>
+            <td>Sees the correct architecture of everything. Almost always right — that's exactly her problem.</td>
+          </tr>
+          <tr>
+            <td><span class="cn" style="color:#e87848;">Kael</span></td>
+            <td>★★★★</td>
+            <td><span class="badge b-ent">Entropy</span></td>
+            <td>DPS · Speed / Risk</td>
+            <td>Binary Daggers</td>
+            <td>His own body taught him that everything ends. Lives in Matter. His lightness was earned.</td>
+          </tr>
+          <tr>
+            <td><span class="cn" style="color:#e8c050;">Caelum</span></td>
+            <td>★★★★</td>
+            <td><span class="badge b-mat">Matter</span></td>
+            <td>Sub-DPS · Range / CC</td>
+            <td>Precision Crossbow</td>
+            <td>Understands everything from a distance. Knows that distance means not being there — can't help it.</td>
+          </tr>
+          <tr>
+            <td><span class="cn" style="color:#7898d8;">Silas</span></td>
+            <td>★★★★★</td>
+            <td><span class="badge b-vac">Void</span></td>
+            <td>Specialist · Control</td>
+            <td>Nexus Lance</td>
+            <td>An event disconnected him from everything known. Now he sees the invisible architecture of the world.</td>
+          </tr>
+          <tr>
+            <td><span class="cn" style="color:#88c494;">Aria</span></td>
+            <td>★★★★</td>
+            <td><span class="badge b-dis">Distortion</span></td>
+            <td>Healer · Utility</td>
+            <td>Precision Crossbow</td>
+            <td>Cares because she knows what it feels like when no one does. Intercepts damage before it arrives.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Version 1.0 Availability</div>
+      <div class="grid g3">
+        <div class="cell">
+          <span class="cell-label">Free — Early Game</span>
+          <div class="cell-body"><strong>Iterant</strong> — protagonist, always free<br><strong>Claire</strong> — delivered early in story<br><strong>Kael</strong> — delivered early in story</div>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Free — Progression</span>
+          <div class="cell-body"><strong>Liora</strong> — unlocked through play<br><strong>Caelum</strong> — unlocked through play<br><strong>Aria</strong> — unlocked through play</div>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Battle Pass 1.0</span>
+          <div class="cell-body"><strong>Valerius</strong> — Free Frequency max reward<br><strong>Silas</strong> — Free Frequency max reward<br><em>Player chooses which 5★ to claim. Both available in shop after the season ends.</em></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Weapon Types</div>
+      <p>All weapons are objects that exist in the world — they can be found, dropped, farmed, or crafted. Characters have a weapon of affinity but no weapon is permanently exclusive to any character.</p>
+      <ul class="dl">
+        <li><strong>Fractal Sword</strong> — A blade with a central fracture that emits ethereal light. The fracture is not damage — it is part of the edge. Affinity: Iterant.</li>
+        <li><strong>Coded Rifle</strong> — Each shot rewrites a property of the target. Does not destroy — redefines conditions. Affinity: Claire.</li>
+        <li><strong>Compression Greatsword</strong> — Accumulates energy per hit, releases in area impacts. Slow and inevitable. Affinity: Valerius.</li>
+        <li><strong>Architect's Compass</strong> — Builds geometric shields that distribute damage by impact geometry. Affinity: Liora.</li>
+        <li><strong>Binary Daggers</strong> — Risk-accumulation system: damage received scales the next explosive attack. Affinity: Kael.</li>
+        <li><strong>Precision Crossbow</strong> — Same weapon, opposite logic. Caelum targets structural break points to disable; Aria targets damage trajectories to intercept. Affinity: Caelum, Aria.</li>
+        <li><strong>Nexus Lance</strong> — Strikes energetic bridges between targets, not the targets themselves. Disconnects rather than destroys. Affinity: Silas.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══ 05 SYSTEMS ══ -->
+  <div class="section" id="systems">
+    <div class="section-header">
+      <span class="section-num">Section 05</span>
+      <div class="section-title">Core Systems</div>
+      <div class="section-sub">Combat, equipment, progression and stats</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Combat Overview</div>
+      <p>Ethereal Convergence uses a <strong>real-time action combat</strong> system with a party of up to four characters. Players switch between characters on the fly, chaining abilities and building synergies across different Realities.</p>
+      <p>Each character has four abilities — <strong>Basic Attack, Resonance Skill, Reaction, and Ultimate</strong> — and seven passive upgrades called <strong>Sequences</strong> that deepen each character's kit. Combat feel is designed around character identity: Kael is fast and explosive, Valerius is slow and inevitable, Silas is methodical and structural.</p>
+      <div class="grid g2">
+        <div class="cell">
+          <span class="cell-label">Unique Mechanics (Designed)</span>
+          <div class="cell-body">
+            <strong>Pressure</strong> (Valerius) — charge stacks converting DEF to damage<br>
+            <strong>Wear</strong> (Kael) — damage received scales next attack<br>
+            <strong>Analysis</strong> (Caelum) — reveals structural break points<br>
+            <strong>Nexus Cutting</strong> (Silas) — disconnects enemy coordination<br>
+            <strong>Interception</strong> (Aria) — redirects damage trajectories
+          </div>
+        </div>
+        <div class="cell">
+          <span class="cell-label">Pending System Design</span>
+          <div class="cell-body">
+            Full ability values and cooldowns<br>
+            Reality reaction system (cross-Reality combos)<br>
+            Enemy AI and boss design<br>
+            Difficulty scaling<br>
+            Co-op or solo-only decision
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Condensations — Equipment System</div>
+      <p><strong>Condensations</strong> are farmable equipment objects that amplify a character's resonance — solidified ethereal energy that took physical form. They integrate directly into a character's equipment with no visual change to the character model. All Condensations are obtainable through gameplay using <strong>Ethereal Flow</strong>.</p>
+      <p>Each set consists of <strong>4 pieces</strong> across 4 slots, with bonuses at <strong>2 pieces</strong> and at <strong>full set (4 pieces)</strong>. The 4-piece bonuses for all sets are pending final balance pass.</p>
+      <table class="tbl">
+        <thead>
+          <tr><th>Set Name</th><th>Type</th><th>2pc Bonus</th><th>4pc</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Primary Fracture</strong></td><td>Generic · ATK</td><td>ATK +18%</td><td>TBD</td></tr>
+          <tr><td><strong>Stable Form</strong></td><td>Generic · DEF</td><td>DEF +20%</td><td>TBD</td></tr>
+          <tr><td><strong>Persistent Flow</strong></td><td>Generic · HP</td><td>HP +20%</td><td>TBD</td></tr>
+          <tr><td><strong>Primordial Signal</strong></td><td>Damage · Neutral</td><td>Neutral DMG +25%</td><td>TBD</td></tr>
+          <tr><td><strong>Gradual Collapse</strong></td><td>Damage · Entropy</td><td>Entropy DMG +20%</td><td>TBD</td></tr>
+          <tr><td><strong>Condition Fracture</strong></td><td>Damage · Distortion</td><td>Distortion DMG +20%</td><td>TBD</td></tr>
+          <tr><td><strong>Structural Collapse</strong></td><td>Damage · Matter</td><td>Matter DMG +20%</td><td>TBD</td></tr>
+          <tr><td><strong>Absolute Silence</strong></td><td>Damage · Void</td><td>Void DMG +20%</td><td>TBD</td></tr>
+          <tr><td><strong>Inverse Frequency</strong></td><td>Damage · Symphony</td><td>Symphony DMG +20%</td><td>TBD</td></tr>
+          <tr><td><strong>Structural Pressure</strong></td><td>Character · Valerius</td><td>DEF +20%</td><td>TBD — DEF as damage vector</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Ethereal Flow — Stamina System</div>
+      <p><strong>Ethereal Flow</strong> is the stamina resource used to farm Condensations and upgrade materials. It regenerates over time and can be optionally replenished through premium items — but base regeneration is designed to cover regular daily play without requiring refills.</p>
+      <p>The system is designed to feel <em>enabling, not restrictive</em>. Premium refills exist as an option, never as a necessity.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Available Stats</div>
+      <p>HP · ATK · DEF · HP% · ATK% · DEF% · CRIT Rate% · CRIT DMG% · Resonance Mastery · Synchrony Overload% · Neutral DMG Bonus% · Entropy / Distortion / Matter / Void / Symphony DMG Bonus% · Healing Bonus%</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══ 06 MONETIZATION ══ -->
+  <div class="section" id="monetization">
+    <div class="section-header">
+      <span class="section-num">Section 06</span>
+      <div class="section-title">Monetization</div>
+      <div class="section-sub">Non-predatory. Sustainable. Respectful of player time.</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Philosophy</div>
+      <p>Ethereal Convergence is built around a <strong>gacha-free model</strong>. No random character pulls. No banner system. No artificial urgency. The game should feel complete for every player regardless of spending — and richer for those who choose to support it.</p>
+      <div class="hl"><p>"A well-built team with free characters and farmable Condensations should clear any content in the game. That is not a design failure — it is the design goal."</p></div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Revenue Streams</div>
+      <table class="tbl">
+        <thead><tr><th>Stream</th><th>Description</th><th>F2P Impact</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Free Frequency</strong><br><em style="font-size:9pt;">Battle Pass — Free Tier</em></td>
+            <td>Free seasonal pass available to all players. Completing it to the maximum rewards a <strong>5★ Resonant of the player's choice</strong> from the season's available pool.</td>
+            <td>None — fully accessible</td>
+          </tr>
+          <tr>
+            <td><strong>Primordial Frequency</strong><br><em style="font-size:9pt;">Battle Pass — Premium Tier</em></td>
+            <td>Paid seasonal pass with additional rewards, materials, and exclusive cosmetics. Completing it to the maximum rewards a <strong>weapon of the player's choice</strong> from the season's pool — independent of the character chosen.</td>
+            <td>Characters available in shop after season at fixed price</td>
+          </tr>
+          <tr>
+            <td><strong>Cosmetic Shop</strong></td>
+            <td>Character skins, ability visual effects, color variants. Zero gameplay impact.</td>
+            <td>None — purely aesthetic</td>
+          </tr>
+          <tr>
+            <td><strong>Ethereal Flow Refills</strong></td>
+            <td>Optional stamina replenishment for players who want to farm more in a single session. Never required for regular play.</td>
+            <td>Minimal — base regeneration covers normal play</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Free-to-Play Commitment</div>
+      <ul class="dl">
+        <li>All story content is free and fully accessible without spending</li>
+        <li>All 5★ Resonants released via Battle Pass become available in the shop after the season — no permanent exclusives</li>
+        <li>No stat-based power gaps between paid and free Condensation sets</li>
+        <li>Free characters (Claire, Kael) are designed to be genuinely competitive — not consolation prizes</li>
+        <li>Ethereal Flow base regeneration covers regular daily play without requiring premium refills</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ══ 07 COLLABORATORS ══ -->
+  <div class="section" id="collaborators">
+    <div class="section-header">
+      <span class="section-num">Section 07</span>
+      <div class="section-title">Collaborator Brief</div>
+      <div class="section-sub">Who we're looking for and what we're building together</div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">What Exists Today</div>
+      <ul class="dl">
+        <li><strong>Complete lore and world framework</strong> — multiverse structure, all Realities, Kyleon System, rules of resonance</li>
+        <li><strong>Full Version 1.0 roster</strong> — 8 characters with complete narrative profiles, visual design guidelines, combat role and personality</li>
+        <li><strong>Complete kit for Valerius</strong> — abilities, sequences, unique Pressure mechanic fully designed</li>
+        <li><strong>Kit briefs for all remaining characters</strong> — Kael, Caelum, Silas, Aria awaiting full kit development</li>
+        <li><strong>Condensation system</strong> — 10 sets named and designed, slot system, full stat list defined</li>
+        <li><strong>Monetization model</strong> — fully designed, gacha-free, all revenue streams defined</li>
+        <li><strong>Engine in evaluation</strong> — Unity 2022 LTS as primary candidate</li>
+      </ul>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Open Roles</div>
+      <div class="grid g2">
+        <div class="collab">
+          <div class="collab-title">3D Character Artist</div>
+          <p>Model and rig original characters following established visual design guidelines. Style reference: Genshin Impact / Wuthering Waves anime-adjacent 3D. Character sheets and palette documentation provided for all 8 characters.</p>
+          <p><em>Priority role.</em></p>
+        </div>
+        <div class="collab">
+          <div class="collab-title">Unity Developer (C#)</div>
+          <p>Build core systems: character controller, combat framework, ability system, Condensation equipment logic, Ethereal Flow stamina system. Full design documentation provided.</p>
+          <p><em>Priority role. Unity 2022 LTS experience preferred.</em></p>
+        </div>
+        <div class="collab">
+          <div class="collab-title">Environment / Level Artist</div>
+          <p>Design and build environments reflecting the aesthetic of each Reality — from the structured geometry of Matter to the incomplete forms of the Void.</p>
+        </div>
+        <div class="collab">
+          <div class="collab-title">UI / UX Designer</div>
+          <p>Design game interface consistent with established visual language. Reference documents and color systems provided for all characters and Realities.</p>
+        </div>
+        <div class="collab">
+          <div class="collab-title">Animator</div>
+          <p>Character animations for combat, movement, and cutscenes. Each character's movement style is defined by their personality — documentation provided per character.</p>
+        </div>
+        <div class="collab">
+          <div class="collab-title">Composer / Sound Designer</div>
+          <p>Original soundtrack and sound effects. Each Reality has a defined sonic identity — from the structured weight of Matter to the oscillating tension of Symphony.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Revenue Share Model</div>
+      <p>All collaborators participate in a <strong>revenue share agreement</strong>. If and when the game generates revenue, earnings are distributed among all contributing team members. Specific percentages are negotiated individually based on role scope and contribution.</p>
+      <p>This is a <em>passion-driven project</em>. There is no upfront payment. The commitment expected is genuine interest in the project's vision.</p>
+    </div>
+
+    <div class="sub">
+      <div class="sub-title">Contact</div>
+      <div class="hl"><p>If something in this document made you want to know more — that's the right instinct. Reach out at <strong>etherealconvergenceofficial@gmail.com</strong></p></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-text">
+      Ethereal Convergence · Game Design Document · Version 1.0<br>
+      <span>Pre-Production · All systems subject to revision</span><br>
+      <span>AI-assisted documentation — all creative decisions by project lead</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
